@@ -35,37 +35,37 @@
       </p>
     </header>
 
-    <!-- 컨트롤 패널 (1주차 C++ 입력 로직 대응) -->
+    <!-- 컨트롤 패널 -->
     <section class="bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-6 mb-6 shadow-xl">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <!-- 1. 분할 방식 선택 (splitOption: 1 or 2) -->
+        <!-- 1. 분할 방식 선택 -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
             1. 운동 분할 방식 선택
           </label>
           <div class="grid grid-cols-2 gap-2.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-700/70">
-            <button id="btn-split-1" onclick="selectSplit(1)"
+            <button id="btn-split-1" type="button"
               class="py-2.5 px-4 rounded-lg text-sm font-bold transition-all bg-indigo-600 text-white shadow-md">
               4분할 루틴
             </button>
-            <button id="btn-split-2" onclick="selectSplit(2)"
+            <button id="btn-split-2" type="button"
               class="py-2.5 px-4 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white">
               3분할 (PPL)
             </button>
           </div>
         </div>
 
-        <!-- 뷰 전환 및 오늘 요일 자동 선택 -->
+        <!-- 빠른 기능 -->
         <div class="flex flex-col justify-between">
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
             빠른 기능
           </label>
           <div class="flex gap-2.5">
-            <button onclick="selectToday()"
+            <button id="btn-today" type="button"
               class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-sm font-semibold transition-all flex items-center justify-center gap-1.5">
               <span>📅 오늘 요일 자동 선택</span>
             </button>
-            <button id="btn-toggle-weekly" onclick="toggleWeeklyView()"
+            <button id="btn-toggle-weekly" type="button"
               class="py-2.5 px-4 rounded-xl bg-slate-700/70 hover:bg-slate-700 text-slate-200 border border-slate-600 text-sm font-semibold transition-all">
               주간 전체표
             </button>
@@ -73,14 +73,12 @@
         </div>
       </div>
 
-      <!-- 2. 요일 선택 (dayOfWeek: 1~6, 0) -->
+      <!-- 2. 요일 선택 -->
       <div>
         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
           2. 요일 선택 (C++ 기준: 월=1 ~ 토=6, 일=0)
         </label>
-        <div id="day-buttons" class="grid grid-cols-7 gap-1.5 sm:gap-2.5">
-          <!-- JS로 렌더링 -->
-        </div>
+        <div id="day-buttons" class="grid grid-cols-7 gap-1.5 sm:gap-2.5"></div>
       </div>
     </section>
 
@@ -92,3 +90,405 @@
             <span id="badge-split" class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
               4분할
             </span>
+            <span id="badge-day" class="text-sm font-medium text-slate-400">월요일</span>
+          </div>
+          <h2 id="routine-title" class="text-2xl font-extrabold text-white">
+            가슴 & 삼두
+          </h2>
+        </div>
+
+        <!-- 진행률 표시 -->
+        <div class="bg-slate-900/90 px-4 py-3 rounded-xl border border-slate-700/70 min-w-[180px]">
+          <div class="flex justify-between items-center text-xs mb-1.5">
+            <span class="text-slate-400 font-medium">오늘 운동 달성률</span>
+            <span id="progress-text" class="font-bold text-emerald-400">0%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 원본 C++ 출력 문자열 미리보기 -->
+      <div class="mb-5 px-4 py-3 rounded-xl bg-slate-950/70 border border-slate-800 font-mono text-xs sm:text-sm text-slate-300">
+        <span class="text-indigo-400 font-bold">[C++ 로직 출력]</span>
+        <span id="raw-cpp-output" class="ml-1"></span>
+      </div>
+
+      <!-- 운동 종목 카드 리스트 -->
+      <div id="exercise-list" class="space-y-3"></div>
+    </main>
+
+    <!-- 주간 전체 루틴 비교표 -->
+    <section id="weekly-view" class="hidden bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-6 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="weekly-title" class="text-xl font-bold text-white">주간 전체 운동 스케줄</h2>
+        <button id="btn-back-daily" type="button" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">
+          ← 일일 상세로 돌아가기
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-700 text-xs uppercase text-slate-400">
+              <th class="py-3 px-3">요일</th>
+              <th class="py-3 px-3">타겟 부위</th>
+              <th class="py-3 px-3">주요 운동 종목</th>
+              <th class="py-3 px-3 text-right">선택</th>
+            </tr>
+          </thead>
+          <tbody id="weekly-table-body" class="divide-y divide-slate-700/60 text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const WORKOUT_DATA = {
+      1: {
+        name: "4분할",
+        days: {
+          1: {
+            dayName: "월요일",
+            target: "가슴 & 삼두",
+            raw: "월요일: [가슴 & 삼두] - 벤치프레스, 딥스, 푸쉬다운",
+            exercises: [
+              { name: "벤치프레스", sets: "4세트 × 8~10회", tip: "견갑골을 후인·하강 고정하고 바벨을 가슴 중앙으로 내립니다." },
+              { name: "딥스", sets: "4세트 × 10~12회", tip: "상체를 약간 앞으로 숙여 대흉근 하부 개입을 높입니다." },
+              { name: "케이블 푸쉬다운", sets: "4세트 × 12~15회", tip: "팔꿈치를 옆구리에 고정하고 삼두근 수축에 집중합니다." }
+            ]
+          },
+          2: {
+            dayName: "화요일",
+            target: "등 & 이두",
+            raw: "화요일: [등 & 이두] - 데드리프트, 바벨로우, 암컬",
+            exercises: [
+              { name: "컨벤셔널 데드리프트", sets: "4세트 × 6~8회", tip: "코어 복압을 단단히 유지하며 바벨이 정강이를 스치듯 들어 올립니다." },
+              { name: "바벨로우", sets: "4세트 × 8~10회", tip: "상체 각도를 45도로 유지하고 바벨을 배꼽 방향으로 당깁니다." },
+              { name: "바벨 암컬", sets: "4세트 × 10~12회", tip: "반동을 최소화하고 이두근의 최대 이완과 수축을 느낍니다." }
+            ]
+          },
+          3: {
+            dayName: "수요일",
+            target: "어깨",
+            raw: "수요일: [어깨] - 오버헤드프레스, 사이드 레터럴 레이즈",
+            exercises: [
+              { name: "오버헤드프레스 (OHP)", sets: "4세트 × 8~10회", tip: "전완근이 지면과 수직이 되도록 유지하며 머리 위로 밀어 올립니다." },
+              { name: "사이드 레터럴 레이즈", sets: "5세트 × 15~20회", tip: "승모근 개입을 줄이고 팔꿈치를 옆으로 멀리 던진다는 느낌으로 수행합니다." }
+            ]
+          },
+          4: {
+            dayName: "목요일",
+            target: "하체",
+            raw: "목요일: [하체] - 스쿼트, 레그프레스, 레그익스텐션",
+            exercises: [
+              { name: "바벨 백 스쿼트", sets: "4세트 × 8~10회", tip: "무릎과 발끝 방향을 일치시키고 고관절과 무릎을 동시에 접어 앉습니다." },
+              { name: "레그프레스", sets: "4세트 × 10~12회", tip: "엉덩이가 패드에서 뜨지 않는 가동범위까지 깊게 내립니다." },
+              { name: "레그익스텐션", sets: "4세트 × 12~15회", tip: "정점에서 1초간 멈춰 대퇴사두근을 강하게 쥐어짭니다." }
+            ]
+          },
+          5: {
+            dayName: "금요일",
+            target: "가슴 & 삼두",
+            raw: "금요일: [가슴 & 삼두] - 인클라인 벤치프레스, 덤벨 프레스",
+            exercises: [
+              { name: "인클라인 벤치프레스", sets: "4세트 × 8~10회", tip: "벤치 각도 30~45도에서 윗가슴 타겟으로 밀어 올립니다." },
+              { name: "플랫 덤벨 프레스", sets: "4세트 × 10~12회", tip: "덤벨의 장점을 살려 가슴 근육을 깊게 이완시킨 후 모아줍니다." }
+            ]
+          },
+          6: {
+            dayName: "토요일",
+            target: "등 & 이두",
+            raw: "토요일: [등 & 이두] - 렛풀다운, 풀업, 덤벨컬",
+            exercises: [
+              { name: "랫풀다운", sets: "4세트 × 10~12회", tip: "가슴을 천장으로 열어주며 바를 쇄골 위쪽으로 당깁니다." },
+              { name: "풀업", sets: "4세트 × 최대 반복", tip: "광배근으로 상체를 끌어올린다는 느낌으로 수행합니다." },
+              { name: "덤벨컬", sets: "4세트 × 10~12회", tip: "손목을 외회전(수피네이션)하며 이두근을 강하게 수축합니다." }
+            ]
+          },
+          0: {
+            dayName: "일요일",
+            target: "휴식 & 리피드",
+            raw: "일요일: [휴식 & 리피드] - 스트레칭 및 충분한 휴식",
+            exercises: [
+              { name: "전신 폼롤러 & 스트레칭", sets: "20분 진행", tip: "한 주간 누적된 근피로를 풀고 관절 가동성을 회복합니다." },
+              { name: "영양 섭취 및 충분한 수면", sets: "회복 집중", tip: "글리코겐 보충과 근성장을 위해 양질의 식사와 수면을 취합니다." }
+            ]
+          }
+        }
+      },
+      2: {
+        name: "3분할 (PPL)",
+        days: {
+          1: {
+            dayName: "월요일",
+            target: "Push - 가슴/어깨/삼두",
+            raw: "월요일: [Push - 가슴/어깨/삼두] - 벤치프레스, OHP, 삼두 익스텐션",
+            exercises: [
+              { name: "벤치프레스", sets: "4세트 × 8~10회", tip: "전면 상체 밀기 핵심 운동으로 안정적인 호흡과 자세를 유지합니다." },
+              { name: "오버헤드프레스 (OHP)", sets: "4세트 × 8~10회", tip: "코어와 둔근에 힘을 주어 허리가 과신전되지 않도록 합니다." },
+              { name: "삼두 익스텐션", sets: "4세트 × 12~15회", tip: "팔꿈치가 벌어지지 않게 고정하고 삼두 장두를 늘려줍니다." }
+            ]
+          },
+          2: {
+            dayName: "화요일",
+            target: "Pull - 등/이두",
+            raw: "화요일: [Pull - 등/이두] - 풀업, 바벨로우, 암컬",
+            exercises: [
+              { name: "풀업", sets: "4세트 × 8~12회", tip: "수직 당기기 동작으로 광배근의 넓이를 키웁니다." },
+              { name: "바벨로우", sets: "4세트 × 8~10회", tip: "수평 당기기 동작으로 등 중앙부와 두께감을 강화합니다." },
+              { name: "암컬", sets: "4세트 × 10~12회", tip: "당기기 운동 후 지친 이두근을 고립하여 마무리합니다." }
+            ]
+          },
+          3: {
+            dayName: "수요일",
+            target: "Legs - 하체/복근",
+            raw: "수요일: [Legs - 하체/복근] - 스쿼트, 런지, 플랭크",
+            exercises: [
+              { name: "스쿼트", sets: "4세트 × 8~10회", tip: "하체 전반의 근력과 협응력을 기르는 핵심 복합관절 운동입니다." },
+              { name: "워킹/제자리 런지", sets: "3세트 × 각 12회", tip: "앞다리 뒤꿈치로 지면을 밀어내며 둔근과 대퇴사두를 자극합니다." },
+              { name: "플랭크", sets: "3세트 × 60초", tip: "머리부터 발끝까지 일직선을 유지하며 복부 긴장을 유지합니다." }
+            ]
+          },
+          4: {
+            dayName: "목요일",
+            target: "Push - 가슴/어깨/삼두",
+            raw: "목요일: [Push - 가슴/어깨/삼두] - 덤벨프레스, 사레레, 딥스",
+            exercises: [
+              { name: "덤벨프레스", sets: "4세트 × 10~12회", tip: "좌우 균형을 맞추며 대흉근에 지속적인 긴장을 줍니다." },
+              { name: "사이드 레터럴 레이즈", sets: "5세트 × 15~20회", tip: "측면 삼각근 고립에 집중합니다." },
+              { name: "딥스", sets: "4세트 × 10~12회", tip: "아랫가슴과 삼두근을 동시에 강하게 자극합니다." }
+            ]
+          },
+          5: {
+            dayName: "금요일",
+            target: "Pull - 등/이두",
+            raw: "금요일: [Pull - 등/이두] - 데드리프트, 렛풀다운, 해머컬",
+            exercises: [
+              { name: "데드리프트", sets: "4세트 × 6~8회", tip: "후면 사슬 전체를 사용하는 고중량 당기기 운동입니다." },
+              { name: "렛풀다운", sets: "4세트 × 10~12회", tip: "어깨가 으쓱하지 않도록 하강시킨 상태에서 당깁니다." },
+              { name: "해머컬", sets: "4세트 × 12회", tip: "상완근과 전완근까지 함께 단련합니다." }
+            ]
+          },
+          6: {
+            dayName: "토요일",
+            target: "Legs - 하체/복근",
+            raw: "토요일: [Legs - 하체/복근] - 스쿼트, 레그컬, 크런치",
+            exercises: [
+              { name: "스쿼트", sets: "4세트 × 8~10회", tip: "발바닥 전체로 지면을 단단히 지지하며 일어납니다." },
+              { name: "레그컬", sets: "4세트 × 12~15회", tip: "햄스트링 수축에 집중하며 천천히 이완합니다." },
+              { name: "크런치", sets: "4세트 × 15~20회", tip: "상복부를 말아 올린다는 느낌으로 호흡을 내뱉으며 수축합니다." }
+            ]
+          },
+          0: {
+            dayName: "일요일",
+            target: "휴식 & 리피드",
+            raw: "일요일: [휴식 & 리피드] - 유산소 걷기 및 스트레칭",
+            exercises: [
+              { name: "가벼운 유산소 걷기", sets: "30~40분 진행", tip: "혈액순환을 촉진해 회복을 돕는 저강도 활동성 휴식입니다." },
+              { name: "전신 스트레칭", sets: "15분 진행", tip: "하체와 상체 주요 근육의 유연성을 회복합니다." }
+            ]
+          }
+        }
+      }
+    };
+
+    let currentSplit = 1;
+    let currentDay = new Date().getDay();
+    let completedSet = new Set();
+    let isWeeklyOpen = false;
+
+    const DAY_ORDER = [
+      { id: 1, short: "월" },
+      { id: 2, short: "화" },
+      { id: 3, short: "수" },
+      { id: 4, short: "목" },
+      { id: 5, short: "금" },
+      { id: 6, short: "토" },
+      { id: 0, short: "일" }
+    ];
+
+    function selectSplit(splitOption) {
+      currentSplit = splitOption;
+      completedSet.clear();
+      updateUI();
+    }
+
+    function selectDay(dayOfWeek) {
+      currentDay = dayOfWeek;
+      completedSet.clear();
+      isWeeklyOpen = false;
+      updateUI();
+    }
+
+    function selectToday() {
+      currentDay = new Date().getDay();
+      completedSet.clear();
+      isWeeklyOpen = false;
+      updateUI();
+    }
+
+    function toggleExercise(idx) {
+      if (completedSet.has(idx)) {
+        completedSet.delete(idx);
+      } else {
+        completedSet.add(idx);
+      }
+      renderExercises();
+    }
+
+    function toggleWeeklyView() {
+      isWeeklyOpen = !isWeeklyOpen;
+      updateUI();
+    }
+
+    function updateUI() {
+      const btn1 = document.getElementById("btn-split-1");
+      const btn2 = document.getElementById("btn-split-2");
+      if (currentSplit === 1) {
+        btn1.className = "py-2.5 px-4 rounded-lg text-sm font-bold transition-all bg-indigo-600 text-white shadow-md";
+        btn2.className = "py-2.5 px-4 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white";
+      } else {
+        btn2.className = "py-2.5 px-4 rounded-lg text-sm font-bold transition-all bg-indigo-600 text-white shadow-md";
+        btn1.className = "py-2.5 px-4 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white";
+      }
+
+      const dayContainer = document.getElementById("day-buttons");
+      dayContainer.innerHTML = DAY_ORDER.map(d => {
+        const isActive = d.id === currentDay;
+        const isSunday = d.id === 0;
+        let btnClass = "py-2.5 rounded-xl text-sm font-bold transition-all border ";
+        if (isActive) {
+          btnClass += "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/20 scale-[1.03]";
+        } else if (isSunday) {
+          btnClass += "bg-slate-900/70 border-slate-700/70 text-rose-400 hover:bg-slate-700/60";
+        } else {
+          btnClass += "bg-slate-900/70 border-slate-700/70 text-slate-300 hover:bg-slate-700/60";
+        }
+        return `<button type="button" data-day="${d.id}" class="${btnClass}">
+                  <div>${d.short}</div>
+                  <div class="text-[10px] opacity-60 font-normal">(${d.id})</div>
+                </button>`;
+      }).join("");
+
+      dayContainer.querySelectorAll("button[data-day]").forEach(btn => {
+        btn.addEventListener("click", () => selectDay(Number(btn.dataset.day)));
+      });
+
+      const dailyView = document.getElementById("daily-view");
+      const weeklyView = document.getElementById("weekly-view");
+      const toggleBtn = document.getElementById("btn-toggle-weekly");
+
+      if (isWeeklyOpen) {
+        dailyView.classList.add("hidden");
+        weeklyView.classList.remove("hidden");
+        toggleBtn.textContent = "일일 상세 보기";
+        renderWeeklyTable();
+      } else {
+        dailyView.classList.remove("hidden");
+        weeklyView.classList.add("hidden");
+        toggleBtn.textContent = "주간 전체표";
+        renderDailyRoutine();
+      }
+    }
+
+    function renderDailyRoutine() {
+      const splitData = WORKOUT_DATA[currentSplit];
+      const routine = splitData.days[currentDay];
+
+      document.getElementById("badge-split").textContent = splitData.name;
+      document.getElementById("badge-day").textContent = `${routine.dayName} (입력값: ${currentDay})`;
+      document.getElementById("routine-title").textContent = routine.target;
+      document.getElementById("raw-cpp-output").textContent = routine.raw;
+
+      renderExercises();
+    }
+
+    function renderExercises() {
+      const routine = WORKOUT_DATA[currentSplit].days[currentDay];
+      const listEl = document.getElementById("exercise-list");
+
+      listEl.innerHTML = routine.exercises.map((ex, idx) => {
+        const done = completedSet.has(idx);
+        return `
+          <div data-ex-idx="${idx}"
+            class="exercise-card cursor-pointer p-4 rounded-xl border flex items-start gap-3.5 ${
+              done
+                ? "bg-emerald-950/30 border-emerald-500/40"
+                : "bg-slate-900/70 border-slate-700/70 hover:border-indigo-500/50"
+            }">
+            <div class="mt-0.5 w-6 h-6 rounded-lg flex items-center justify-center border flex-shrink-0 transition-colors ${
+              done
+                ? "bg-emerald-500 border-emerald-400 text-slate-950 font-bold"
+                : "border-slate-600 text-transparent"
+            }">
+              ✓
+            </div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                <h3 class="font-bold text-base ${done ? "line-through text-slate-400" : "text-white"}">
+                  ${ex.name}
+                </h3>
+                <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${
+                  done ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-800 text-indigo-300 border border-slate-700"
+                }">
+                  ${ex.sets}
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm ${done ? "text-slate-500" : "text-slate-400"}">
+                💡 ${ex.tip}
+              </p>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      listEl.querySelectorAll("[data-ex-idx]").forEach(card => {
+        card.addEventListener("click", () => toggleExercise(Number(card.dataset.exIdx)));
+      });
+
+      const total = routine.exercises.length;
+      const pct = total === 0 ? 0 : Math.round((completedSet.size / total) * 100);
+      document.getElementById("progress-text").textContent = `${pct}% (${completedSet.size}/${total})`;
+      document.getElementById("progress-bar").style.width = `${pct}%`;
+    }
+
+    function renderWeeklyTable() {
+      const splitData = WORKOUT_DATA[currentSplit];
+      document.getElementById("weekly-title").textContent = `${splitData.name} 주간 전체 스케줄`;
+      const tbody = document.getElementById("weekly-table-body");
+
+      tbody.innerHTML = DAY_ORDER.map(d => {
+        const item = splitData.days[d.id];
+        const isCurrent = d.id === currentDay;
+        const exNames = item.exercises.map(e => e.name).join(", ");
+        return `
+          <tr class="${isCurrent ? "bg-indigo-500/10" : "hover:bg-slate-700/30"}">
+            <td class="py-3 px-3 font-bold ${d.id === 0 ? "text-rose-400" : "text-white"}">${item.dayName}</td>
+            <td class="py-3 px-3 font-semibold text-indigo-300">${item.target}</td>
+            <td class="py-3 px-3 text-slate-300">${exNames}</td>
+            <td class="py-3 px-3 text-right">
+              <button type="button" data-select-day="${d.id}"
+                class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-indigo-600 text-white transition-colors">
+                보기
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.querySelectorAll("button[data-select-day]").forEach(btn => {
+        btn.addEventListener("click", () => selectDay(Number(btn.dataset.selectDay)));
+      });
+    }
+
+    document.getElementById("btn-split-1").addEventListener("click", () => selectSplit(1));
+    document.getElementById("btn-split-2").addEventListener("click", () => selectSplit(2));
+    document.getElementById("btn-today").addEventListener("click", selectToday);
+    document.getElementById("btn-toggle-weekly").addEventListener("click", toggleWeeklyView);
+    document.getElementById("btn-back-daily").addEventListener("click", toggleWeeklyView);
+
+    updateUI();
+  </script>
+</body>
+</html>
